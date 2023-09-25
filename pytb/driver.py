@@ -13,9 +13,9 @@ class Driver(pyuvm.uvm_driver):
         self.intf_bfm_cls = BusFunctionalModel()
 
     async def start_bfm_work(self):
-        self.intf_bfm_cls.reset_dut()
-        self.intf_bfm_cls.config_dut()
-        self.intf_bfm_cls.spawn_necessary_threads()
+        await self.intf_bfm_cls.reset_dut()
+        await self.intf_bfm_cls.config_dut()
+        await self.intf_bfm_cls.spawn_necessary_threads()
 
     async def run_phase(self):
         await self.start_bfm_work()

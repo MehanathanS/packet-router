@@ -98,7 +98,7 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
         bfr_rst_dly = random.randint(2,10)
         aft_rst_dly = random.randint(2,12)
         self.dut.reset.value = 0
-        self.wait_clk(bfr_rst_dly)
+        await self.wait_clk(bfr_rst_dly)
         self.dut.reset.value = 1
         self.dut.mem_en.value = 0
         self.dut.mem_rd_wr.value = 0
@@ -106,26 +106,26 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
         self.dut.mem_data.value = 0
         self.dut.data_status.value = 0
         self.dut.data.value = 0
-        self.wait_clk(aft_rst_dly)
+        await self.wait_clk(aft_rst_dly)
         self.dut.reset.value = 0
 
     async def config_dut(self):
-        self.wait_clk(1)
+        await self.wait_clk(1)
         self.dut.mem_en.value = 1
         self.dut.mem_rd_wr.value = 1
         for idx in range(NUM_OF_PORTS):
             self.dut.mem_add.value = idx
             self.dut.mem_data.value = self.cfg_cls.port[idx]
-            self.wait_clk(1)
+            await self.wait_clk(1)
         self.dut.mem_en.value = 0
         self.dut.mem_rd_wr.value = 0
         self.dut.mem_add.value = 0
         self.dut.mem_data.value = 0
-        self.wait_clk(1)
+        await self.wait_clk(1)
 
     async def drive_dut(self):
         while True:
-            self.wait_clk(1)
+            await self.wait_clk(1)
             try:
                 user_list = self.driver_queue.get_nowait()
                 list_len = len(user_list)
@@ -133,12 +133,12 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
                     full = int(self.dut.fifo_full.value)
                     while full == 1:
                         self.dut.data_status.value = 0
-                        self.wait_clk(1)
+                        await self.wait_clk(1)
                         full = int(self.dut.fifo_full.value)
                     self.dut.data_status.value = 1
                     self.dut.data.value = user_list[index]
                     if index != list_len - 1:
-                        self.wait_clk(1)
+                        await self.wait_clk(1)
                 self.cmd_sent_queue.put_nowait(user_list)
             except cocotb.queue.QueueEmpty:
                 self.dut.data_status.value = 0
@@ -148,7 +148,7 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
         list_size = 0
         data_size = 0
         while True:
-            self.wait_clk(1)
+            await self.wait_clk(1)
             if self.dut.data_status.value == 1:
                 if list_size == 2:
                     data_size = self.dut.data.value
@@ -197,20 +197,20 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
         user_list = []
         data_size = 0
         while True:
-            self.wait_clk(1)
+            await self.wait_clk(1)
             if self.get_ready_val(port_num) == 1:
                 self.set_read_val(port_num,1)
-                self.wait_clk(1)
+                await self.wait_clk(1)
                 user_list.append(self.get_port_val(port_num)) #Capture DST_PORT
-                self.wait_clk(1)
+                await self.wait_clk(1)
                 user_list.append(self.get_port_val(port_num)) #Capture SRC_PORT
-                self.wait_clk(1)
+                await self.wait_clk(1)
                 user_list.append(self.get_port_val(port_num)) #Capture Length
                 data_size = user_list[-1]
                 for _ in range(data_size):
-                    self.wait_clk(1)
+                    await self.wait_clk(1)
                     user_list.append(self.get_port_val(port_num)) #Capture Data
-                self.wait_clk(1)
+                await self.wait_clk(1)
                 user_list.append(self.get_port_val(port_num)) #Capture CRC
                 self.out_mon_queue[port_num].put_nowait(user_list)
                 self.set_read_val(port_num,0)

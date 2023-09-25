@@ -26,7 +26,10 @@ module switch (
   output logic fifo_full
 );
 
-logic [0:3][7:0] port_addr;
+logic [7:0] port0_addr;
+logic [7:0] port1_addr;
+logic [7:0] port2_addr;
+logic [7:0] port3_addr;
 logic [1:0] out_sel;
 logic [7:0] fifo_rd_data;
 logic fifo_empty;
@@ -47,11 +50,16 @@ assign port3 = (data_out_en && (out_sel==2'b11)) ? fifo_rd_data : 8'h00;
 //Port address configuration
 always_ff@(posedge(clk),posedge(reset)) begin
   if(reset) begin 
-    port_addr <= '{4{8'hff}};
+    port0_addr <= 8'hff;
+    port1_addr <= 8'hff;
+    port2_addr <= 8'hff;
+    port3_addr <= 8'hff;
   end
   else begin 
-    if(mem_en && mem_rd_wr) 
-      port_addr[mem_add] <= mem_data;
+    port0_addr <= (mem_en && mem_rd_wr && (mem_add == 2'b00)) ? mem_data : port0_addr;
+    port1_addr <= (mem_en && mem_rd_wr && (mem_add == 2'b01)) ? mem_data : port1_addr;
+    port2_addr <= (mem_en && mem_rd_wr && (mem_add == 2'b10)) ? mem_data : port2_addr;
+    port3_addr <= (mem_en && mem_rd_wr && (mem_add == 2'b11)) ? mem_data : port3_addr;
   end
 end
 
@@ -72,7 +80,7 @@ always_comb begin
   case(state) 
     IDLE : begin
       if(!fifo_empty) begin
-        if((fifo_rd_data == port_addr[0]) || (fifo_rd_data == port_addr[1]) || (fifo_rd_data == port_addr[2]) || (fifo_rd_data == port_addr[3])) begin
+        if((fifo_rd_data == port0_addr) || (fifo_rd_data == port1_addr) || (fifo_rd_data == port2_addr) || (fifo_rd_data == port3_addr)) begin
           next_state = AWAIT_READ;
         end
         else begin
@@ -157,22 +165,22 @@ always_ff@(posedge(clk),posedge(reset)) begin
       AWAIT_READ : begin
         if(!fifo_empty) begin
           case(fifo_rd_data)
-            port_addr[0] : begin
+            port0_addr : begin
               ready_0 <= 1'b1;
               out_sel <= 2'b00;
             end
 
-            port_addr[1] : begin
+            port1_addr : begin
               ready_1 <= 1'b1;
               out_sel <= 2'b01;
             end
 
-            port_addr[2] : begin
+            port2_addr : begin
               ready_2 <= 1'b1;
               out_sel <= 2'b10;
             end
 
-            port_addr[3] : begin
+            port3_addr : begin
               ready_3 <= 1'b1;
               out_sel <= 2'b11;
             end

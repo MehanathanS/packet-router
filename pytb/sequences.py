@@ -12,7 +12,7 @@ class BaseSequence(pyuvm.uvm_sequence):
 
 class RandLenSequence(BaseSequence):
     async def body(self):
-        super().body()
+        await super().body()
         for _ in range(self.cfg_cls.num_txn):
             item = transaction.Transaction("SeqItem")
             await self.start_item(item)
