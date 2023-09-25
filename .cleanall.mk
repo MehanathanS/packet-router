@@ -1,5 +1,5 @@
 check:
-	$(CWD)/../combine_results.py
+	$(CWD)/../.combine_results.py
 
 cleanall: check clean
 	@rm -rf __pycache__
