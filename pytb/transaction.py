@@ -10,7 +10,6 @@ class Transaction(pyuvm.uvm_sequence_item):
         self.valid_dst = 0
         self.fcs_type = FcsType.GOOD_FCS
         self.fcs = 0
-        self.packed_data = []
         self.cfg_class = ConfigClass()
 
     def randomize(self):
@@ -31,15 +30,14 @@ class Transaction(pyuvm.uvm_sequence_item):
         self.fcs = self.calc_fcs()
         if self.fcs_type == FcsType.BAD_FCS:
             self.fcs = self.fcs ^ 0xFF
-        self.pack_packet()
-        self.print_packet()
+        self.print_packet("After__Random")
 
     def calc_fcs(self):
         local_fcs = 0
         local_fcs = self.src_port ^ self.dst_port
         local_fcs = local_fcs ^ self.length
-        for item in self.data:
-            local_fcs = local_fcs ^ item
+        for _item in self.data:
+            local_fcs = local_fcs ^ _item
         return local_fcs
 
     def check_fcs(self):
@@ -50,27 +48,29 @@ class Transaction(pyuvm.uvm_sequence_item):
             self.fcs_type = FcsType.BAD_FCS
 
     def pack_packet(self):
-        self.packed_data.append(self.dst_port)
-        self.packed_data.append(self.src_port)
-        self.packed_data.append(self.length)
-        for item in self.data:
-            self.packed_data.append(item)
-        self.packed_data.append(self.fcs)
+        packed_data = []
+        packed_data.append(self.dst_port)
+        packed_data.append(self.src_port)
+        packed_data.append(self.length)
+        for _item in self.data:
+            packed_data.append(_item)
+        packed_data.append(self.fcs)
+        return packed_data
 
-    def unpack_packet(self):
-        self.dst_port = self.packed_data[0]
-        self.src_port = self.packed_data[1]
-        self.length = self.packed_data[2]
-        self.fcs = self.packed_data[-1]
-        self.data = self.packed_data[3:-1]
+    def unpack_packet(self, packed_data:list):
+        self.dst_port = packed_data[0]
+        self.src_port = packed_data[1]
+        self.length = packed_data[2]
+        self.fcs = packed_data[-1]
+        self.data = packed_data[3:-1]
         self.check_fcs()
-        self.print_packet()
+        self.print_packet("unpack_packet")
         if self.length != len(self.data):
             logging.fatal("Problem Observed with Unpacked Packet")
 
-    def print_packet(self):
-        logging.debug("SRC_PORT = %s DST_PORT = %s Length = %s DATA_SIZE = %s FCS = %s TYPE = %s",
-                      hex(self.src_port), hex(self.dst_port), self.length, len(self.data),
+    def print_packet(self, fname):
+        logging.debug("%s : SRC_PORT = %s DST_PORT = %s Len = %s DATA_SIZE = %s FCS = %s TYPE = %s",
+                      fname, hex(self.src_port), hex(self.dst_port), self.length, len(self.data),
                       hex(self.fcs), self.fcs_type.name)
 
 if __name__ == "__main__":
@@ -81,5 +81,16 @@ if __name__ == "__main__":
     cfg_class.randomize()
 
     for _ in range(10):
-        SW_Txn = Transaction("MyTransaction")
-        SW_Txn.randomize()
+        sw_txn1 = Transaction("FirstTransaction")
+        sw_txn2 = Transaction("SecondTransaction")
+        sw_txn1.randomize()
+        user_list1 = sw_txn1.pack_packet()
+        sw_txn2.unpack_packet(user_list1)
+        user_list2 = sw_txn2.pack_packet()
+        if len(user_list1) != len(user_list2):
+            logging.critical("Not Matched ::: List1Size = %s ::: List2Size = %s",
+                              len(user_list1), len(user_list2))
+        for index,item in enumerate(user_list1):
+            if user_list1[index] != user_list2[index]:
+                logging.critical("Item at %s Not Matched ::: List1Item = %s ::: List2Item = %s",
+                                 index, user_list1[index], user_list2[index])
