@@ -5,10 +5,10 @@ class BaseSequence(pyuvm.uvm_sequence):
     def __init__(self, name):
         super().__init__(name)
         self.cfg_cls = ConfigClass()
+        self.bfm_cls = BusFunctionalModel()
 
     async def body(self):
         self.sequencer = pyuvm.ConfigDB().get(None, "", "Sequencer")
-
 
 class RandLenSequence(BaseSequence):
     async def body(self):
@@ -16,4 +16,6 @@ class RandLenSequence(BaseSequence):
         for _ in range(self.cfg_cls.num_txn):
             item = transaction.Transaction("SeqItem")
             await self.start_item(item)
+            item.randomize()
             await self.finish_item(item)
+        await self.bfm_cls.wait_clk(2000)

@@ -3,13 +3,11 @@ import env
 from sequences import *
 sys.path.append(str(Path("..").resolve()))
 
-@pyuvm.test()
 class BaseTestClass(pyuvm.uvm_test):
     def __init__(self,name = "BaseTest",parent = None):
         super().__init__(name,parent)
         self.env = None
         self.test_seq = None
-        setup_logger()
 
     def build_phase(self):
         self.env = env.RouterEnv("RouterEnv",self)

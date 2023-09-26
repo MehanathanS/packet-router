@@ -17,7 +17,7 @@ class InputMonitor(pyuvm.uvm_component):
         while True:
             item = await self.intf_bfm_cls.get_inp_mon_txn()
             txnp = transaction.Transaction("InpMonTxn")
-            txnp.unpack_packet(item)
+            txnp.unpack_packet(item, "InpTxnMon")
             self.inp_mon_port.write(txnp)
 
 class OutputMonitor(pyuvm.uvm_component):
@@ -37,5 +37,5 @@ class OutputMonitor(pyuvm.uvm_component):
         while True:
             item = await self.intf_bfm_cls.get_out_mon_txn(self.port_num)
             txnp = transaction.Transaction(f"OutMonTxn[{self.port_num}]")
-            txnp.unpack_packet(item)
+            txnp.unpack_packet(item, f"OutMonTxn[{self.port_num}]")
             self.out_mon_port.write(txnp)

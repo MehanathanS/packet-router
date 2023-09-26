@@ -5,12 +5,15 @@ import monitor
 class RouterEnv(pyuvm.uvm_env):
     def __init__(self,name,parent):
         super().__init__(name,parent)
+        self.cfg = ConfigClass(self.logger)
+        self.bfm = BusFunctionalModel(self.logger)
         self.seqr = None
         self.driver = None
         self.inp_mon = None
         self.out_mon = [None for _ in range(NUM_OF_PORTS)]
 
     def build_phase(self):
+        self.cfg.randomize()
         self.seqr = pyuvm.uvm_sequencer("Sequencer",self)
         pyuvm.ConfigDB().set(None, "*", "Sequencer", self.seqr)
         self.driver = driver.Driver.create("Driver",self)

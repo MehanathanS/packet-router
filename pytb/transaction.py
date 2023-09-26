@@ -22,7 +22,8 @@ class Transaction(pyuvm.uvm_sequence_item):
             self.dst_port = random.randint(0, 0xFF)
             self.src_port = random.choice(
                 [val for val in self.cfg_class.port if val != self.dst_port])
-        self.length = random.randint(0, 0xFF)
+        #TODO self.length = random.randint(0, 0xFF)
+        self.length = 1
         self.data = [random.randint(0,0xFF) for _ in range(self.length)]
         self.post_randomize()
 
@@ -57,27 +58,36 @@ class Transaction(pyuvm.uvm_sequence_item):
         packed_data.append(self.fcs)
         return packed_data
 
-    def unpack_packet(self, packed_data:list):
+    def unpack_packet(self, packed_data:list, caller_name:str):
         self.dst_port = packed_data[0]
         self.src_port = packed_data[1]
         self.length = packed_data[2]
         self.fcs = packed_data[-1]
         self.data = packed_data[3:-1]
         self.check_fcs()
-        self.print_packet("unpack_packet")
+        self.print_packet(f"unpack_packet_{caller_name}")
         if self.length != len(self.data):
-            logging.fatal("Problem Observed with Unpacked Packet")
+            self.cfg_class.logger.fatal("Problem Observed with Unpacked Packet")
 
     def print_packet(self, fname):
-        logging.debug("%s : SRC_PORT = %s DST_PORT = %s Len = %s DATA_SIZE = %s FCS = %s TYPE = %s",
-                      fname, hex(self.src_port), hex(self.dst_port), self.length, len(self.data),
+        self.cfg_class.logger.debug("%s : SRC_PORT = %s DST_PORT = %s Len = %s DATA_SIZE = %s FCS = %s TYPE = %s",
+                      fname, hex(self.src_port), hex(self.dst_port), int(self.length), len(self.data),
                       hex(self.fcs), self.fcs_type.name)
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    import logging
+    MyLogger = logging.getLogger("MyLogger")
+    MyLogger.setLevel(logging.DEBUG)
 
-    cfg_class = ConfigClass()
+    MyConsoleHandler = logging.StreamHandler()
+    MyConsoleHandler.setLevel(logging.DEBUG)
+
+    MyFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    MyConsoleHandler.setFormatter(MyFormatter)
+
+    MyLogger.addHandler(MyConsoleHandler)
+
+    cfg_class = ConfigClass(MyLogger)
     cfg_class.randomize()
 
     for _ in range(10):
@@ -88,9 +98,9 @@ if __name__ == "__main__":
         sw_txn2.unpack_packet(user_list1)
         user_list2 = sw_txn2.pack_packet()
         if len(user_list1) != len(user_list2):
-            logging.critical("Not Matched ::: List1Size = %s ::: List2Size = %s",
+            pyuvm.uvm_root().logger.critical("Not Matched ::: List1Size = %s ::: List2Size = %s",
                               len(user_list1), len(user_list2))
         for index,item in enumerate(user_list1):
             if user_list1[index] != user_list2[index]:
-                logging.critical("Item at %s Not Matched ::: List1Item = %s ::: List2Item = %s",
+                pyuvm.uvm_root().logger.critical("Item at %s Not Matched ::: List1Item = %s ::: List2Item = %s",
                                  index, user_list1[index], user_list2[index])

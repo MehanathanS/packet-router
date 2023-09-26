@@ -9,4 +9,4 @@ cleanall: check clean
 	@rm -rf sim_build
 	@rm -rf modelsim.ini
 	@rm -rf transcript
-
+	@rm -rf dump.vcd

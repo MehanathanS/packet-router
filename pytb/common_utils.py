@@ -1,6 +1,5 @@
 import argparse
 import random
-import logging
 import sys
 from enum import Enum, unique
 from pathlib import Path
@@ -14,17 +13,6 @@ class FcsType(Enum):
     GOOD_FCS = 0
     BAD_FCS = 1
 
-def setup_logger():
-    try:
-        cocotb.default_config()
-    except RuntimeError:
-        pass
-    logging.basicConfig(level=logging.NOTSET)
-    logger = logging.getLogger("name")
-    logging.addLevelName(5, "TEST")
-    logger.setLevel(5)
-    logger.log(5, "TST_MSG")
-
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--no_delay", action="store_true")
@@ -33,13 +21,14 @@ def parse_arguments():
     return args
 
 class ConfigClass(metaclass=pyuvm.utility_classes.Singleton):
-    def __init__(self):
+    def __init__(self, parent_logger = pyuvm.uvm_root().logger):
         self.__rand_dly = 0
         self.port = [0 for _ in range(NUM_OF_PORTS)]
         self.mon_dly = [0 for _ in range(NUM_OF_PORTS)]
         self.num_txn = 0
         self.min_delay = 1
         self.max_delay = 20
+        self.logger = parent_logger
 
     def randomize(self):
         args = parse_arguments()
@@ -57,20 +46,21 @@ class ConfigClass(metaclass=pyuvm.utility_classes.Singleton):
         self.post_randomize()
 
     def post_randomize(self):
-        logging.info("CFG_CLS : NUM_TXN = %s NUM_PORTS = %s", self.num_txn, NUM_OF_PORTS)
+        self.logger.info("CFG_CLS : NUM_TXN = %s NUM_PORTS = %s", self.num_txn, NUM_OF_PORTS)
         tstr = ', '.join(f'Port[{lv}] = {hex(self.port[lv])}' for lv in range(NUM_OF_PORTS))
-        logging.info("CFG_CLS : %s", tstr)
+        self.logger.info("CFG_CLS : %s", tstr)
         tstr = ', '.join(f'MonDelay[{lv}] = {self.mon_dly[lv]}' for lv in range(NUM_OF_PORTS))
-        logging.info("CFG_CLS : %s", tstr)
+        self.logger.info("CFG_CLS : %s", tstr)
 
 class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
-    def __init__(self):
+    def __init__(self, parent_logger = pyuvm.uvm_root().logger):
         self.dut = cocotb.top
         self.driver_queue = cocotb.queue.Queue(maxsize = 1)
         self.inp_mon_queue = cocotb.queue.Queue(maxsize = 0)
         self.out_mon_queue = [cocotb.queue.Queue(maxsize = 0) for _ in range(NUM_OF_PORTS)]
         self.cmd_sent_queue = cocotb.queue.Queue(maxsize=1)
         self.cfg_cls = ConfigClass()
+        self.logger = parent_logger
 
     async def send_txn(self, user_list:list):
         await self.driver_queue.put(user_list)
@@ -85,14 +75,16 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
 
     async def get_out_mon_txn(self, port_num):
         if port_num >= NUM_OF_PORTS:
-            logging.critical("Unexpected Port Num = %s", port_num)
+            self.logger.critical("Unexpected Port Num = %s", port_num)
         user_list = await self.out_mon_queue[port_num].get()
         return user_list
 
     async def wait_clk(self, num_clk):
         if num_clk > 0:
             for _ in range(num_clk):
-                await cocotb.triggers.FallingEdge(self.dut.clk)
+                await cocotb.triggers.FallingEdge(self.dut.clock)
+        else:
+            self.logger.critical("Unexpected Value for NumClk - %s", num_clk)
 
     async def reset_dut(self):
         bfr_rst_dly = random.randint(2,10)
@@ -137,8 +129,9 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
                         full = int(self.dut.fifo_full.value)
                     self.dut.data_status.value = 1
                     self.dut.data.value = user_list[index]
-                    if index != list_len - 1:
-                        await self.wait_clk(1)
+                    await self.wait_clk(1)
+                self.dut.data_status.value = 0
+                self.dut.data.value = random.randint(0, 0xFF)
                 self.cmd_sent_queue.put_nowait(user_list)
             except cocotb.queue.QueueEmpty:
                 self.dut.data_status.value = 0
@@ -184,29 +177,29 @@ class BusFunctionalModel(metaclass=pyuvm.utility_classes.Singleton):
     def set_read_val(self, port_num, val):
         if port_num == 0:
             self.dut.read_0.value = val
-        if port_num == 1:
+        elif port_num == 1:
             self.dut.read_1.value = val
-        if port_num == 2:
+        elif port_num == 2:
             self.dut.read_2.value = val
         else:
             self.dut.read_3.value = val
 
     async def mon_out_intf(self, port_num):
         if port_num >= NUM_OF_PORTS:
-            logging.critical("Unexpected Port Num = %s", port_num)
-        user_list = []
-        data_size = 0
+            self.logger.critical("Unexpected Port Num = %s", port_num)
         while True:
             await self.wait_clk(1)
             if self.get_ready_val(port_num) == 1:
+                user_list = []
+                data_size = 0
                 self.set_read_val(port_num,1)
                 await self.wait_clk(1)
                 user_list.append(self.get_port_val(port_num)) #Capture DST_PORT
                 await self.wait_clk(1)
                 user_list.append(self.get_port_val(port_num)) #Capture SRC_PORT
                 await self.wait_clk(1)
-                user_list.append(self.get_port_val(port_num)) #Capture Length
-                data_size = user_list[-1]
+                data_size = self.get_port_val(port_num)
+                user_list.append(data_size) #Capture Length
                 for _ in range(data_size):
                     await self.wait_clk(1)
                     user_list.append(self.get_port_val(port_num)) #Capture Data
