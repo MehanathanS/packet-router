@@ -18,4 +18,3 @@ class RandLenSequence(BaseSequence):
             await self.start_item(item)
             item.randomize()
             await self.finish_item(item)
-        await self.bfm_cls.wait_clk(2000)

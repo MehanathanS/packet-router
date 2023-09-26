@@ -16,7 +16,20 @@ class BaseTestClass(pyuvm.uvm_test):
     async def run_phase(self):
         self.raise_objection()
         await self.test_seq.start()
+        await self.wait_for_all_txns_to_complete()
         self.drop_objection()
+
+    async def wait_for_all_txns_to_complete(self):
+        live_loop_count = 0
+        tmax_loop_count = self.env.cfg.num_txn
+        while True:
+            if self.env.bfm.dut.dut.fifo_empty.value == 1:
+                break
+            else:
+                await self.env.bfm.wait_clk(260)
+                live_loop_count += 1
+            if live_loop_count == tmax_loop_count:
+                break
 
 @pyuvm.test()
 class RandLenTest(BaseTestClass):

@@ -22,8 +22,7 @@ class Transaction(pyuvm.uvm_sequence_item):
             self.dst_port = random.randint(0, 0xFF)
             self.src_port = random.choice(
                 [val for val in self.cfg_class.port if val != self.dst_port])
-        #TODO self.length = random.randint(0, 0xFF)
-        self.length = 1
+        self.length = random.randint(0, 0xFF)
         self.data = [random.randint(0,0xFF) for _ in range(self.length)]
         self.post_randomize()
 

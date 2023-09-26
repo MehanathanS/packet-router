@@ -70,7 +70,7 @@ switch dut(
 
 initial begin
   $dumpfile("dump.vcd");
-  $dumpvars(0,packet_router);
+  $dumpvars(0,dut);
 end
 
 initial clock = 1'b1;
