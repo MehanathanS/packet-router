@@ -5,7 +5,6 @@ class BaseSequence(pyuvm.uvm_sequence):
     def __init__(self, name):
         super().__init__(name)
         self.cfg_cls = ConfigClass()
-        self.bfm_cls = BusFunctionalModel()
 
     async def body(self):
         self.sequencer = pyuvm.ConfigDB().get(None, "", "Sequencer")

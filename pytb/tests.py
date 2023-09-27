@@ -1,7 +1,6 @@
 from common_utils import *
 import env
 from sequences import *
-sys.path.append(str(Path("..").resolve()))
 
 class BaseTestClass(pyuvm.uvm_test):
     def __init__(self,name = "BaseTest",parent = None):
@@ -23,10 +22,10 @@ class BaseTestClass(pyuvm.uvm_test):
         live_loop_count = 0
         tmax_loop_count = self.env.cfg.num_txn
         while True:
-            if self.env.bfm.dut.dut.fifo_empty.value == 1:
+            if cocotb.top.dut.fifo_empty.value == 1:
                 break
             else:
-                await self.env.bfm.wait_clk(260)
+                await wait_clk(260)
                 live_loop_count += 1
             if live_loop_count == tmax_loop_count:
                 break

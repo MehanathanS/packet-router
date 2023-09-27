@@ -6,7 +6,6 @@ class RouterEnv(pyuvm.uvm_env):
     def __init__(self,name,parent):
         super().__init__(name,parent)
         self.cfg = ConfigClass(self.logger)
-        self.bfm = BusFunctionalModel(self.logger)
         self.seqr = None
         self.driver = None
         self.inp_mon = None

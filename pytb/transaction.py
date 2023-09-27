@@ -70,8 +70,8 @@ class Transaction(pyuvm.uvm_sequence_item):
 
     def print_packet(self, fname):
         self.cfg_class.logger.debug("%s : SRC_PORT = %s DST_PORT = %s Len = %s DATA_SIZE = %s FCS = %s TYPE = %s",
-                      fname, hex(self.src_port), hex(self.dst_port), int(self.length), len(self.data),
-                      hex(self.fcs), self.fcs_type.name)
+                                    fname, hex(self.src_port), hex(self.dst_port), int(self.length), len(self.data),
+                                    hex(self.fcs), self.fcs_type.name)
 
 if __name__ == "__main__":
     import logging
