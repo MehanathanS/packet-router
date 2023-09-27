@@ -89,17 +89,17 @@ if __name__ == "__main__":
     cfg_class = ConfigClass(MyLogger)
     cfg_class.randomize()
 
-    for _ in range(10):
+    for _ in range(cfg_class.num_txn):
         sw_txn1 = Transaction("FirstTransaction")
         sw_txn2 = Transaction("SecondTransaction")
         sw_txn1.randomize()
         user_list1 = sw_txn1.pack_packet()
-        sw_txn2.unpack_packet(user_list1)
+        sw_txn2.unpack_packet(user_list1, "UnitTest")
         user_list2 = sw_txn2.pack_packet()
         if len(user_list1) != len(user_list2):
-            pyuvm.uvm_root().logger.critical("Not Matched ::: List1Size = %s ::: List2Size = %s",
+            MyLogger.critical("Not Matched ::: List1Size = %s ::: List2Size = %s",
                               len(user_list1), len(user_list2))
         for index,item in enumerate(user_list1):
             if user_list1[index] != user_list2[index]:
-                pyuvm.uvm_root().logger.critical("Item at %s Not Matched ::: List1Item = %s ::: List2Item = %s",
-                                 index, user_list1[index], user_list2[index])
+                MyLogger.critical("Item at %s Not Matched ::: List1Item = %s ::: List2Item = %s",
+                                  index, user_list1[index], user_list2[index])

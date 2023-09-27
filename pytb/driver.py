@@ -60,4 +60,5 @@ class Driver(pyuvm.uvm_driver):
             item = await self.seq_item_port.get_next_item()
             user_list = item.pack_packet()
             await self.drive_dut(user_list)
+            self.drv_inp_port.write(item)
             self.seq_item_port.item_done()
