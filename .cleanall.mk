@@ -7,6 +7,6 @@ cleanall: check clean
 	@rm -rf combined_results.xml
 	@rm -rf log.txt
 	@rm -rf sim_build
-	@rm -rf modelsim.ini
-	@rm -rf transcript
+	@rm -rf .coverage
+	@rm -rf htmlcov
 	@rm -rf dump.vcd

@@ -1,4 +1,3 @@
-import argparse
 import random
 from enum import Enum, unique
 import cocotb
@@ -10,13 +9,6 @@ NUM_OF_PORTS = 4
 class FcsType(Enum):
     GOOD_FCS = 0
     BAD_FCS = 1
-
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--no_delay", action="store_true")
-    parser.add_argument("--num_txn", type=int, default=random.randint(1, 5000))
-    args = parser.parse_args()
-    return args
 
 async def wait_clk(num_clk):
     if num_clk > 0:
@@ -34,8 +26,7 @@ class ConfigClass(metaclass=pyuvm.utility_classes.Singleton):
         self.logger = parent_logger
 
     def randomize(self):
-        args = parse_arguments()
-        if args.no_delay:
+        if "NO_DELAY" in cocotb.plusargs:
             self.__rand_dly = 0
         else:
             self.__rand_dly = 1
@@ -45,7 +36,10 @@ class ConfigClass(metaclass=pyuvm.utility_classes.Singleton):
                 range(self.min_delay, self.max_delay), NUM_OF_PORTS)
         else:
             self.max_mon_dly = [0 for _ in range(NUM_OF_PORTS)]
-        self.num_txn = args.num_txn
+        if "NUM_TXN" in cocotb.plusargs:
+            self.num_txn = int(cocotb.plusargs["NUM_TXN"])
+        else:
+            self.num_txn = random.randint(1,5000)
         self.post_randomize()
 
     def post_randomize(self):
