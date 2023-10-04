@@ -8,21 +8,35 @@ class Transaction(pyuvm.uvm_sequence_item):
         self.length = 0
         self.data = []
         self.valid_dst = 0
+        self.min_len = 0
+        self.max_len = 0xFF
         self.fcs_type = FcsType.GOOD_FCS
         self.fcs = 0
         self.cfg_class = ConfigClass()
 
     def randomize(self):
-        self.valid_dst = random.choices([1,0], [0.95, 0.05])[0]
+        if self.cfg_class.test_DA not in ["rand", "valid", "invalid"]:
+            self.cfg_class.logger.fatal("Invalid %s Test_DA Type in Cfg_Class", self.cfg_class.test_DA)
+        if self.cfg_class.test_DA == "rand":
+            self.valid_dst = random.choices([1,0], [0.95, 0.05])[0]
+        else:
+            self.valid_dst = 1 if self.cfg_class.test_DA == "valid" else 0
+        if self.cfg_class.test_FCS not in ["rand", "good", "bad"]:
+            self.cfg_class.logger.fatal("Invalid %s Test_FCS Type in Cfg_Class", self.cfg_class.test_FCS)
+        if self.cfg_class.test_FCS == "rand":
+            self.fcs_type = random.choice(list(FcsType))
+        else:
+            self.fcs_type = FcsType.GOOD_FCS if self.cfg_class.test_DA == "good" else FcsType.BAD_FCS
         if self.valid_dst == 1:
             self.dst_port = random.choice(self.cfg_class.port)
             self.src_port = random.choice(
                 [val for val in range(0, 0xFF) if val not in self.cfg_class.port])
         else:
-            self.dst_port = random.randint(0, 0xFF)
+            self.dst_port = random.choice(
+                [val for val in range(0, 0xFF) if val not in self.cfg_class.port])
             self.src_port = random.choice(
-                [val for val in self.cfg_class.port if val != self.dst_port])
-        self.length = random.randint(0, 0xFF)
+                [val for val in range(0, 0xFF) if val != self.dst_port])
+        self.length = random.randint(self.min_len, self.max_len)
         self.data = [random.randint(0,0xFF) for _ in range(self.length)]
         self.post_randomize()
 

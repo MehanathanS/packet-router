@@ -31,6 +31,42 @@ class BaseTestClass(pyuvm.uvm_test):
                 break
 
 @pyuvm.test()
+class ZeroLenTest(BaseTestClass):
+    def __init__(self, name="RandLenTest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, ZeroLenSequence)
+        super().build_phase()
+
+@pyuvm.test()
+class MinRangeLenTest(BaseTestClass):
+    def __init__(self, name="RandLenTest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, MinRangeLenSequence)
+        super().build_phase()
+
+@pyuvm.test()
+class MaxRangeLenTest(BaseTestClass):
+    def __init__(self, name="RandLenTest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, MaxRangeLenSequence)
+        super().build_phase()
+
+@pyuvm.test()
+class MaxLenTest(BaseTestClass):
+    def __init__(self, name="RandLenTest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, MaxLenSequence)
+        super().build_phase()
+
+@pyuvm.test()
 class RandLenTest(BaseTestClass):
     def __init__(self, name="RandLenTest", parent=None):
         super().__init__(name, parent)
@@ -38,3 +74,67 @@ class RandLenTest(BaseTestClass):
     def build_phase(self):
         pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, RandLenSequence)
         super().build_phase()
+
+@pyuvm.test()
+class OnlyValidDATest(BaseTestClass):
+    def __init__(self, name="OnlyValidDATest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, RandLenSequence)
+        super().build_phase()
+        self.env.cfg.test_DA = "valid"
+
+    def report_phase(self):
+        passed = True
+        if self.env.scbd.drpd_trans != 0:
+            passed = False
+        assert passed
+
+@pyuvm.test()
+class OnlyInvalidDATest(BaseTestClass):
+    def __init__(self, name="OnlyInvalidDATest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, RandLenSequence)
+        super().build_phase()
+        self.env.cfg.test_DA = "invalid"
+
+    def report_phase(self):
+        passed = True
+        if self.env.scbd.drpd_trans != self.env.cfg.num_txn:
+            passed = False
+        assert passed
+
+@pyuvm.test(expect_fail=True)
+class BadFCSTest(BaseTestClass):
+    def __init__(self, name="BadFCSTest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, RandLenSequence)
+        super().build_phase()
+        self.env.cfg.test_FCS = "bad"
+
+    def report_phase(self):
+        passed = True
+        if self.env.scbd.fail_trans != self.env.cfg.num_txn:
+            passed = False
+        assert passed
+
+@pyuvm.test(expect_fail=True)
+class RandFCSTest(BaseTestClass):
+    def __init__(self, name="RandFCSTest", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        pyuvm.uvm_factory().set_type_override_by_type(BaseSequence, RandLenSequence)
+        super().build_phase()
+        self.env.cfg.test_FCS = "rand"
+
+    def report_phase(self):
+        passed = True
+        if self.env.scbd.fail_trans == 0:
+            passed = False
+        assert passed

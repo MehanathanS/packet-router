@@ -18,6 +18,8 @@ async def wait_clk(num_clk):
 class ConfigClass(metaclass=pyuvm.utility_classes.Singleton):
     def __init__(self, parent_logger = pyuvm.uvm_root().logger):
         self.__rand_dly = 0
+        self.test_DA = "rand"
+        self.test_FCS = "good"
         self.port = [0 for _ in range(NUM_OF_PORTS)]
         self.max_mon_dly = [0 for _ in range(NUM_OF_PORTS)]
         self.num_txn = 0
