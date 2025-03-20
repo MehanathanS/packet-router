@@ -23,7 +23,7 @@ class ZeroLenSequence(BaseSequence):
         tasks = []
         for _ in range(self.cfg_cls.num_txn):
             task = cocotb.start_soon(self.send_txn(0,0))
-            tasks.append(cocotb.triggers.Join(task))
+            tasks.append(task)
         await cocotb.triggers.Combine(*tasks)
 
 class MinRangeLenSequence(BaseSequence):
@@ -32,7 +32,7 @@ class MinRangeLenSequence(BaseSequence):
         tasks = []
         for _ in range(self.cfg_cls.num_txn):
             task = cocotb.start_soon(self.send_txn(1, 10))
-            tasks.append(cocotb.triggers.Join(task))
+            tasks.append(task)
         await cocotb.triggers.Combine(*tasks)
 
 class MaxRangeLenSequence(BaseSequence):
@@ -41,7 +41,7 @@ class MaxRangeLenSequence(BaseSequence):
         tasks = []
         for _ in range(self.cfg_cls.num_txn):
             task = cocotb.start_soon(self.send_txn(0xF0, 0XFE))
-            tasks.append(cocotb.triggers.Join(task))
+            tasks.append(task)
         await cocotb.triggers.Combine(*tasks)
 
 class MaxLenSequence(BaseSequence):
@@ -50,7 +50,7 @@ class MaxLenSequence(BaseSequence):
         tasks = []
         for _ in range(self.cfg_cls.num_txn):
             task = cocotb.start_soon(self.send_txn(0xFF, 0xFF))
-            tasks.append(cocotb.triggers.Join(task))
+            tasks.append(task)
         await cocotb.triggers.Combine(*tasks)
 
 class RandLenSequence(BaseSequence):
@@ -59,5 +59,5 @@ class RandLenSequence(BaseSequence):
         tasks = []
         for _ in range(self.cfg_cls.num_txn):
             task = cocotb.start_soon(self.send_txn(0, 0xFF))
-            tasks.append(cocotb.triggers.Join(task))
+            tasks.append(task)
         await cocotb.triggers.Combine(*tasks)
