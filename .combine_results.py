@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #pylint: disable-all
 """
 This script comes from cocotb/bin. It checks the result of

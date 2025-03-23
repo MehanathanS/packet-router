@@ -1,7 +1,7 @@
 check:
 	$(CWD)/../.combine_results.py
 
-cleanall: check clean
+testclean:
 	@rm -rf __pycache__
 	@rm -rf results.xml
 	@rm -rf combined_results.xml
@@ -10,3 +10,5 @@ cleanall: check clean
 	@rm -rf .coverage
 	@rm -rf htmlcov
 	@rm -rf dump.vcd
+
+checkclean: check testclean
