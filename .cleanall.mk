@@ -1,4 +1,4 @@
-check:
+testcheck:
 	$(CWD)/../.combine_results.py
 
 testclean:
@@ -11,4 +11,4 @@ testclean:
 	@rm -rf htmlcov
 	@rm -rf dump.vcd
 
-checkclean: check testclean
+checkclean: testcheck testclean
